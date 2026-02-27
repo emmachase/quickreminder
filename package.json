@@ -1,0 +1,29 @@
+{
+  "name": "quickreminder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node deploy-commands.js",
+    "test": "node --test test/db.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emmachase/quickreminder.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/emmachase/quickreminder/issues"
+  },
+  "homepage": "https://github.com/emmachase/quickreminder#readme",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "better-sqlite3": "^12.6.2",
+    "discord.js": "^14.25.1",
+    "dotenv": "^17.3.1"
+  }
+}
