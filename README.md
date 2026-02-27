@@ -1,34 +1,37 @@
 # quickreminder
 
-A Discord bot that lets you set, view, edit, and cancel reminders using natural language — powered by **Claude Haiku 4.5** for intelligent time parsing.
+A Discord bot that lets you set, view, edit, and cancel reminders using natural language — powered by **Claude Haiku 4.5** for intelligent parsing, built with **Bun** and **TypeScript**.
 
 ## Features
 
 | Command | Description |
 |---|---|
-| `/remind when:<time> message:<text>` | Create a reminder |
+| `/remind text:<anything>` | Create a reminder — write what *and* when in one sentence |
 | `/reminders` | List your active reminders |
 | `/remind-edit id:<n> [when:…] [message:…]` | Edit an existing reminder |
 | `/remind-cancel id:<n>` | Cancel a reminder |
 
-Time expressions are processed by Claude Haiku 4.5, so you can write things like:
-- `"in 30 minutes"`
-- `"tomorrow at 9am"`
-- `"next Monday at noon"`
-- `"in 2 hours and 15 minutes"`
+The `/remind` command accepts a single freeform sentence. Claude Haiku 4.5 extracts both the time and the message for you:
+
+| Input | Parsed time | Parsed message |
+|---|---|---|
+| `call mom in 30 minutes` | +30 min | "call mom" |
+| `standup tomorrow at 9am` | next day 09:00 | "standup" |
+| `buy milk on Friday` | next Friday | "buy milk" |
 
 ## Setup
 
+
 ### 1. Prerequisites
 
-- [Node.js](https://nodejs.org/) 18+
+- [Bun](https://bun.sh) 1.0+
 - A [Discord application](https://discord.com/developers/applications) with a Bot token
 - An [Anthropic API key](https://console.anthropic.com)
 
 ### 2. Install dependencies
 
 ```bash
-npm install
+bun install
 ```
 
 ### 3. Configure environment variables
@@ -56,7 +59,7 @@ Optional:
 ### 4. Deploy slash commands
 
 ```bash
-npm run deploy
+bun run deploy
 ```
 
 For testing, add `DISCORD_GUILD_ID=<your server id>` to `.env` — guild-scoped commands register instantly.  
@@ -65,23 +68,36 @@ For production, remove `DISCORD_GUILD_ID` — global commands take up to 1 hour 
 ### 5. Start the bot
 
 ```bash
-npm start
+bun start
+```
+
+### Docker
+
+```bash
+docker build -t quickreminder .
+docker run -d \
+  -e DISCORD_TOKEN=... \
+  -e DISCORD_CLIENT_ID=... \
+  -e ANTHROPIC_API_KEY=... \
+  -v quickreminder-data:/data \
+  quickreminder
 ```
 
 ## Architecture
 
 ```
 src/
-  index.js        — Bot entry point, command dispatcher
-  db.js           — SQLite database layer (better-sqlite3)
-  llm.js          — Claude Haiku 4.5 time parser
-  scheduler.js    — Background polling loop (fires due reminders every 15 s)
+  index.ts        — Bot entry point, command dispatcher
+  db.ts           — SQLite database layer (bun:sqlite)
+  llm.ts          — Claude Haiku 4.5 — parses time + message from freeform input
+  scheduler.ts    — Background polling loop (fires due reminders every 15 s)
   commands/
-    remind.js         — /remind command
-    reminders.js      — /reminders command
-    remind-edit.js    — /remind-edit command
-    remind-cancel.js  — /remind-cancel command
-deploy-commands.js  — One-time script to register slash commands with Discord
+    remind.ts         — /remind command (single freeform text field)
+    reminders.ts      — /reminders command
+    remind-edit.ts    — /remind-edit command
+    remind-cancel.ts  — /remind-cancel command
+deploy-commands.ts  — One-time script to register slash commands with Discord
+Dockerfile          — Multi-stage Docker image using oven/bun
 ```
 
 Reminders are stored in a local SQLite database (`reminders.db`).  
