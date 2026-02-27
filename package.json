@@ -1,0 +1,21 @@
+{
+  "name": "quickreminder",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "deploy": "bun run deploy-commands.ts",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
+    "discord.js": "^14.25.1"
+  }
+}
