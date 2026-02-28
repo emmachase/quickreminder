@@ -28,6 +28,7 @@ export async function parseReminder(
   now: Date = new Date()
 ): Promise<ParsedReminder> {
   const nowIso = now.toISOString();
+  const nowLocal = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" });
 
   const response = await getClient().messages.create({
     model: "claude-haiku-4-5",
@@ -35,10 +36,10 @@ export async function parseReminder(
     messages: [
       {
         role: "user",
-        content: `Current UTC time: ${nowIso}
+        content: `Current time: ${nowLocal} (America/Los_Angeles) / ${nowIso} UTC
 
 You are a reminder parser. Given the user's freeform reminder text, extract:
-1. The ISO 8601 UTC timestamp for when the reminder should fire
+1. The ISO 8601 UTC timestamp for when the reminder should fire. Interpret any times without an explicit timezone as America/Los_Angeles.
 2. A concise reminder message (strip time words, keep the action/topic)
 
 Reply with ONLY a JSON object in this exact format (no markdown, no extra text):
@@ -88,6 +89,7 @@ export async function parseReminderTime(
   now: Date = new Date()
 ): Promise<Date> {
   const nowIso = now.toISOString();
+  const nowLocal = now.toLocaleString("en-US", { timeZone: "America/Los_Angeles", timeZoneName: "short" });
 
   const response = await getClient().messages.create({
     model: "claude-haiku-4-5",
@@ -95,9 +97,9 @@ export async function parseReminderTime(
     messages: [
       {
         role: "user",
-        content: `Current UTC time: ${nowIso}
+        content: `Current time: ${nowLocal} (America/Los_Angeles) / ${nowIso} UTC
 
-Parse the following time expression and return ONLY an ISO 8601 UTC timestamp with nothing else.
+Parse the following time expression and return ONLY an ISO 8601 UTC timestamp with nothing else. Interpret any times without an explicit timezone as America/Los_Angeles.
 
 Time expression: ${JSON.stringify(timeExpression)}`,
       },
