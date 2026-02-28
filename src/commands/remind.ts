@@ -1,10 +1,18 @@
-import { SlashCommandBuilder, MessageFlags, type ChatInputCommandInteraction } from "discord.js";
+import {
+  SlashCommandBuilder,
+  MessageFlags,
+  InteractionContextType,
+  ApplicationIntegrationType,
+  type ChatInputCommandInteraction,
+} from "discord.js";
 import { parseReminder } from "../llm.ts";
 import { createReminder } from "../db.ts";
 
 export const data = new SlashCommandBuilder()
   .setName("remind")
   .setDescription("Set a reminder — just describe what and when in plain English")
+  .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
+  .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
   .addStringOption((opt) =>
     opt
       .setName("text")

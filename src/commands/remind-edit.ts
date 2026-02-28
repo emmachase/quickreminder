@@ -1,6 +1,8 @@
 import {
   SlashCommandBuilder,
   MessageFlags,
+  InteractionContextType,
+  ApplicationIntegrationType,
   type ChatInputCommandInteraction,
 } from "discord.js";
 import { parseReminderTime } from "../llm.ts";
@@ -9,6 +11,8 @@ import { updateReminder, getReminder, type UpdateReminderInput } from "../db.ts"
 export const data = new SlashCommandBuilder()
   .setName("remind-edit")
   .setDescription("Edit an existing reminder")
+  .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
+  .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
   .addIntegerOption((opt) =>
     opt
       .setName("id")

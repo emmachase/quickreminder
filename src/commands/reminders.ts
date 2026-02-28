@@ -2,13 +2,17 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
   MessageFlags,
+  InteractionContextType,
+  ApplicationIntegrationType,
   type ChatInputCommandInteraction,
 } from "discord.js";
 import { getUserReminders } from "../db.ts";
 
 export const data = new SlashCommandBuilder()
   .setName("reminders")
-  .setDescription("List your active reminders");
+  .setDescription("List your active reminders")
+  .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
+  .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel);
 
 export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
   const reminders = getUserReminders(interaction.user.id);

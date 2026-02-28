@@ -7,7 +7,7 @@ export interface Reminder {
   id: number;
   user_id: string;
   guild_id: string | null;
-  channel_id: string;
+  channel_id: string | null;
   message: string;
   remind_at: number; // unix epoch seconds
   created_at: number;
@@ -32,7 +32,7 @@ function initSchema(db: Database): void {
       id         INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id    TEXT    NOT NULL,
       guild_id   TEXT,
-      channel_id TEXT    NOT NULL,
+      channel_id TEXT,
       message    TEXT    NOT NULL,
       remind_at  INTEGER NOT NULL,
       created_at INTEGER NOT NULL DEFAULT (unixepoch()),
@@ -42,12 +42,53 @@ function initSchema(db: Database): void {
   db.run(
     "CREATE INDEX IF NOT EXISTS idx_reminders_remind_at ON reminders(remind_at) WHERE fired = 0"
   );
+  migrateChannelIdNullable(db);
+}
+
+/**
+ * If the existing table was created with channel_id NOT NULL, recreate it
+ * without that constraint. SQLite doesn't support ALTER COLUMN, so we use
+ * the standard rename-recreate-copy-drop pattern inside a transaction.
+ */
+function migrateChannelIdNullable(db: Database): void {
+  // Check whether channel_id is currently NOT NULL by inspecting table_info.
+  const cols = db
+    .query<{ name: string; notnull: number }, []>("PRAGMA table_info(reminders)")
+    .all();
+  const channelCol = cols.find((c) => c.name === "channel_id");
+  if (!channelCol || channelCol.notnull === 0) return; // already nullable, nothing to do
+
+  db.transaction(() => {
+    db.run("ALTER TABLE reminders RENAME TO reminders_old");
+    db.run(`
+      CREATE TABLE reminders (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id    TEXT    NOT NULL,
+        guild_id   TEXT,
+        channel_id TEXT,
+        message    TEXT    NOT NULL,
+        remind_at  INTEGER NOT NULL,
+        created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+        fired      INTEGER NOT NULL DEFAULT 0
+      )
+    `);
+    db.run(`
+      INSERT INTO reminders (id, user_id, guild_id, channel_id, message, remind_at, created_at, fired)
+      SELECT id, user_id, guild_id, channel_id, message, remind_at, created_at, fired
+      FROM reminders_old
+    `);
+    db.run("DROP TABLE reminders_old");
+    db.run(
+      "CREATE INDEX IF NOT EXISTS idx_reminders_remind_at ON reminders(remind_at) WHERE fired = 0"
+    );
+  })();
+  console.log("[db] Migrated channel_id to nullable.");
 }
 
 export interface CreateReminderInput {
   userId: string;
   guildId: string | null;
-  channelId: string;
+  channelId: string | null;
   message: string;
   remindAt: number; // ms
 }

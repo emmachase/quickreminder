@@ -24,9 +24,11 @@ for (const file of commandFiles) {
 }
 
 // ── Discord Client ───────────────────────────────────────────────────────────
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
+});
 
-client.once("ready", () => {
+client.once("clientReady", () => {
   console.log(`✅ Logged in as ${client.user!.tag}`);
   startScheduler(client);
 });

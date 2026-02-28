@@ -1,6 +1,8 @@
 import {
   SlashCommandBuilder,
   MessageFlags,
+  InteractionContextType,
+  ApplicationIntegrationType,
   type ChatInputCommandInteraction,
 } from "discord.js";
 import { cancelReminder } from "../db.ts";
@@ -8,6 +10,8 @@ import { cancelReminder } from "../db.ts";
 export const data = new SlashCommandBuilder()
   .setName("remind-cancel")
   .setDescription("Cancel a reminder")
+  .setIntegrationTypes(ApplicationIntegrationType.GuildInstall, ApplicationIntegrationType.UserInstall)
+  .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
   .addIntegerOption((opt) =>
     opt
       .setName("id")
