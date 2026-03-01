@@ -17,6 +17,34 @@ export interface ParsedReminder {
 }
 
 /**
+ * Returns the local hour (0–23) for the given date in America/Los_Angeles.
+ * Exported for testing.
+ */
+export function getLocalHourLA(now: Date): number {
+  return parseInt(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      hour: "2-digit",
+      hour12: false,
+    }).format(now),
+    10
+  );
+}
+
+/**
+ * Returns a prompt note reminding the LLM to treat "tomorrow" as "today"
+ * when the local time is between midnight and 3 AM (exclusive).
+ * Exported for testing.
+ */
+export function lateNightTomorrowNote(now: Date): string {
+  const hour = getLocalHourLA(now);
+  if (hour >= 0 && hour < 3) {
+    return '\nNote: Since it is currently between midnight and 3 AM local time, treat "tomorrow" as meaning "today" (the current calendar date).';
+  }
+  return "";
+}
+
+/**
  * Use Claude Haiku 4.5 to split a single freeform reminder string into a
  * scheduled time and a message. The user can type anything, e.g.:
  *   "remind me to call mom in 30 minutes"
@@ -41,7 +69,7 @@ export async function parseReminder(
 You are a reminder parser. Given the user's freeform reminder text, extract:
 1. The ISO 8601 UTC timestamp for when the reminder should fire. Interpret any times without an explicit timezone as America/Los_Angeles.
 2. A concise reminder message (strip time words, keep the action/topic)
-
+${lateNightTomorrowNote(now)}
 Reply with ONLY a JSON object in this exact format (no markdown, no extra text):
 {"remindAt":"<ISO timestamp>","message":"<reminder text>"}
 
@@ -99,7 +127,7 @@ export async function parseReminderTime(
         role: "user",
         content: `Current time: ${nowLocal} (America/Los_Angeles) / ${nowIso} UTC
 
-Parse the following time expression and return ONLY an ISO 8601 UTC timestamp with nothing else. Interpret any times without an explicit timezone as America/Los_Angeles.
+Parse the following time expression and return ONLY an ISO 8601 UTC timestamp with nothing else. Interpret any times without an explicit timezone as America/Los_Angeles.${lateNightTomorrowNote(now)}
 
 Time expression: ${JSON.stringify(timeExpression)}`,
       },
